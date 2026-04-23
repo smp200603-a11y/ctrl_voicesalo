@@ -11,7 +11,24 @@ import json
 from gtts import gTTS
 from googletrans import Translator
 
-def on_publish(client,userdata,result):             #create function for callback
+# --- ESTILO VISUAL (FONDO MORADO) ---
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background: linear-gradient(135deg, #4B0082, #8A2BE2);
+        color: white;
+    }
+    h1, h2, h3, p {
+        color: white;
+        text-align: center;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+def on_publish(client,userdata,result):
     print("El dato ha sido publicado \n")
     pass
 
@@ -19,28 +36,24 @@ def on_message(client, userdata, message):
     global message_received
     time.sleep(2)
     message_received=str(message.payload.decode("utf-8"))
-    st.write(message_received)
+    st.write("📩 Mensaje recibido:", message_received)
 
 broker="broker.mqttdashboard.com"
 port=1883
 client1= paho.Client("Salogib")
 client1.on_message = on_message
 
-
-
-st.title("Detecta tu voz aqui")
-st.subheader("CONTROL POR VOZ")
+# --- TITULOS CON EMOJIS ---
+st.title("🎤 Detecta tu voz aquí")
+st.subheader("🗣️ Control por voz")
 
 image = Image.open('voice_ctrl.jpg')
-
 st.image(image, width=200)
 
+st.write("👉 Toca el botón y habla")
 
-
-
-st.write("Toca el Botón y habla ")
-
-stt_button = Button(label=" Inicio ", width=200)
+# --- BOTON ---
+stt_button = Button(label="🎙️ Iniciar", width=200)
 
 stt_button.js_on_event("button_click", CustomJS(code="""
     var recognition = new webkitSpeechRecognition();
@@ -71,13 +84,14 @@ result = streamlit_bokeh_events(
 
 if result:
     if "GET_TEXT" in result:
-        st.write(result.get("GET_TEXT"))
+        texto = result.get("GET_TEXT")
+        st.success(f"📝 Dijiste: {texto}")
+
         client1.on_publish = on_publish                            
         client1.connect(broker,port)  
-        message =json.dumps({"Act1":result.get("GET_TEXT").strip()})
+        message =json.dumps({"Act1":texto.strip()})
         ret= client1.publish("voice_ctrlSalogib", message)
 
-    
     try:
         os.mkdir("temp")
     except:
